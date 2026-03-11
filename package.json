@@ -1,0 +1,58 @@
+{
+  "name": "comet-bay-scoreboard",
+  "version": "1.0.0",
+  "description": "Comet Bay Bowling Club scoreboard (admin + display, offline, Electron).",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.cometbay.scoreboard",
+    "productName": "Comet Bay Scoreboard",
+    "files": [
+      "main.js",
+      "server.js",
+      "preload.js",
+      "admin/**/*",
+      "display/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "data",
+        "to": "data",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "images",
+        "to": "images",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "server.js",
+      "node_modules/**",
+      "data/**",
+      "images/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  },
+  "dependencies": {
+    "electron": "^30.0.0",
+    "express": "^4.19.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3"
+  }
+}
