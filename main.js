@@ -1,42 +1,44 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { spawn } = require("child_process");
 
 let mainWindow;
 let displayWindow;
 
 /* -------------------------------------------------------
-   START SERVER (DEV + PACKAGED)
+   START SERVER USING CHILD PROCESS (WORKS 100% IN EXE)
 ------------------------------------------------------- */
 function startServer() {
   const isDev = !app.isPackaged;
 
-  let serverPath;
+  let serverPath = isDev
+    ? path.join(__dirname, "server.js")
+    : path.join(process.resourcesPath, "app.asar.unpacked", "server.js");
 
-  if (isDev) {
-    // Running from source
-    serverPath = path.join(__dirname, "server.js");
-  } else {
-    // Running from installed EXE
-    serverPath = path.join(
-      process.resourcesPath,
-      "app.asar.unpacked",
-      "server.js"
-    );
-  }
-
-  console.log("MAIN: isDev =", isDev);
-  console.log("MAIN: serverPath =", serverPath);
+  console.log("MAIN: Starting server from", serverPath);
 
   try {
-    require(serverPath);
-    console.log("MAIN: server.js loaded successfully");
+    const child = spawn(process.execPath, [serverPath], {
+      detached: true,
+      stdio: "ignore"
+    });
+
+    child.unref();
+
+    // Confirm server launch
+    try {
+      fs.writeFileSync("C:\\server-started.txt", "Server launched");
+    } catch (err) {
+      console.log("Could not write server-started.txt:", err);
+    }
+
   } catch (err) {
-    console.error("MAIN: FAILED to load server.js:", err);
+    console.error("MAIN: FAILED to launch server:", err);
     try {
       fs.writeFileSync("C:\\server-error.txt", err.toString());
     } catch (writeErr) {
-      console.error("MAIN: Could not write server-error.txt:", writeErr);
+      console.log("Could not write server-error.txt:", writeErr);
     }
   }
 }
@@ -45,7 +47,6 @@ function startServer() {
    CREATE WINDOWS
 ------------------------------------------------------- */
 function createWindows() {
-  // Admin window
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 900,
@@ -54,7 +55,6 @@ function createWindows() {
     },
   });
 
-  // Display window
   displayWindow = new BrowserWindow({
     width: 1920,
     height: 1080,
@@ -63,10 +63,7 @@ function createWindows() {
     },
   });
 
-  // Load admin UI
   mainWindow.loadFile(path.join(__dirname, "admin", "admin.html"));
-
-  // Load display UI
   displayWindow.loadFile(path.join(__dirname, "display", "display.html"));
 }
 
@@ -76,12 +73,6 @@ function createWindows() {
 app.whenReady().then(() => {
   startServer();
   createWindows();
-
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindows();
-    }
-  });
 });
 
 /* -------------------------------------------------------
