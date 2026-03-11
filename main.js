@@ -5,70 +5,90 @@ const fs = require("fs");
 let mainWindow;
 let displayWindow;
 
-// Prevent double-launch
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-  process.exit(0);
-}
-
+/* -------------------------------------------------------
+   START SERVER (DEV + PACKAGED)
+------------------------------------------------------- */
 function startServer() {
   const isDev = !app.isPackaged;
 
-  const serverPath = isDev
-    ? path.join(__dirname, "server.js")
-    : path.join(process.resourcesPath, "app.asar.unpacked", "server.js");
+  let serverPath;
+
+  if (isDev) {
+    // Running from source
+    serverPath = path.join(__dirname, "server.js");
+  } else {
+    // Running from installed EXE
+    serverPath = path.join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      "server.js"
+    );
+  }
 
   console.log("MAIN: isDev =", isDev);
   console.log("MAIN: serverPath =", serverPath);
-
-  if (!fs.existsSync(serverPath)) {
-    console.error("MAIN: server.js NOT FOUND at:", serverPath);
-    return;
-  }
 
   try {
     require(serverPath);
     console.log("MAIN: server.js loaded successfully");
   } catch (err) {
-    console.error("MAIN: server.js failed to load:", err);
+    console.error("MAIN: FAILED to load server.js:", err);
+    try {
+      fs.writeFileSync("C:\\server-error.txt", err.toString());
+    } catch (writeErr) {
+      console.error("MAIN: Could not write server-error.txt:", writeErr);
+    }
   }
 }
 
+/* -------------------------------------------------------
+   CREATE WINDOWS
+------------------------------------------------------- */
 function createWindows() {
-  const isDev = !app.isPackaged;
-
-  // ADMIN WINDOW
+  // Admin window
   mainWindow = new BrowserWindow({
-    width: 1400,
+    width: 1200,
     height: 900,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: false,
-      contextIsolation: true
-    }
+    },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "admin", "admin.html"));
-
-  // DISPLAY WINDOW
+  // Display window
   displayWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 1920,
+    height: 1080,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: false,
-      contextIsolation: true
-    }
+    },
   });
 
+  // Load admin UI
+  mainWindow.loadFile(path.join(__dirname, "admin", "admin.html"));
+
+  // Load display UI
   displayWindow.loadFile(path.join(__dirname, "display", "display.html"));
 }
 
+/* -------------------------------------------------------
+   APP READY
+------------------------------------------------------- */
 app.whenReady().then(() => {
   startServer();
   createWindows();
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindows();
+    }
+  });
 });
 
+/* -------------------------------------------------------
+   QUIT ON CLOSE (WINDOWS)
+------------------------------------------------------- */
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
