@@ -10,7 +10,6 @@
   "build": {
     "appId": "com.cometbay.scoreboard",
     "productName": "Comet Bay Scoreboard",
-    "publish": "never",
     "files": [
       "main.js",
       "server.js",
