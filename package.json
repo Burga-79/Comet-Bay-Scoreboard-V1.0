@@ -1,58 +1,63 @@
 {
   "name": "comet-bay-scoreboard",
   "version": "1.0.0",
-  "description": "Comet Bay Bowling Club scoreboard (admin + display, offline, Electron).",
+  "description": "Comet Bay Scoreboard System",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "pack": "electron-builder --dir",
     "dist": "electron-builder"
+  },
+  "author": "Adam",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.6.0"
   },
   "build": {
     "appId": "com.cometbay.scoreboard",
     "productName": "Comet Bay Scoreboard",
+    "directories": {
+      "output": "dist"
+    },
     "files": [
-      "main.js",
-      "server.js",
-      "preload.js",
       "admin/**/*",
       "display/**/*",
-      "package.json"
+      "server.js",
+      "preload.js",
+      "package.json",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {
-        "from": "data",
-        "to": "data",
-        "filter": ["**/*"]
+        "from": "server.js",
+        "to": "server.js"
       },
       {
-        "from": "images",
-        "to": "images",
-        "filter": ["**/*"]
+        "from": "node_modules",
+        "to": "node_modules"
       }
     ],
     "asar": true,
     "asarUnpack": [
       "server.js",
-      "node_modules/**",
-      "data/**",
-      "images/**"
+      "node_modules/express/**/*",
+      "node_modules/multer/**/*"
     ],
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
-  },
-  "dependencies": {
-    "express": "^4.19.0",
-    "multer": "^1.4.5-lts.1"
-  },
-  "devDependencies": {
-    "electron": "^30.0.0",
-    "electron-builder": "^24.13.3"
   }
 }
